@@ -4,34 +4,37 @@ import "../styles.scss";
 
 
 const Index = () => {
-  const [service, setService] = React.useState('')
-  const [services, setServices] = React.useState()
-  const [form, setForm] = React.useState()
-  const [formData, setFormData] = React.useState()
+  const [services, setServices] = React.useState(undefined)
+  const [form, setForm] = React.useState(undefined)
+  const [formData, setFormData] = React.useState(undefined)
 
   const [loading, setLoading] = React.useState('loading');
+  let service
+
   React.useEffect(() => {
-    fetch('https://clinia-coding-challenge.s3.ca-central-1.amazonaws.com/services.json')
-    .then(res => res.json())
-    .then(data => setServices(data))
-
-    fetch('https://clinia-coding-challenge.s3.ca-central-1.amazonaws.com/form.json')
-    .then(res => res.json())
-    .then(data => setForm(data))
-
-    setLoading('idle')
+    async function fetchData() {
+      await fetch('http://clinia-coding-challenge.s3.ca-central-1.amazonaws.com/services.json')
+      .then(res => res.json())
+      .then(data => {
+        setServices(data)
+      })
+      await fetch('http://clinia-coding-challenge.s3.ca-central-1.amazonaws.com/form.json')
+      .then(res => res.json())
+      .then(data => {
+        setForm(data)
+      })
+      setLoading('idle')
+    }
+    fetchData()
   },[])
 
-  if(loading === 'idle') {
+  const serviceHandler = (ev) => {
+    service = ev.target.value
     setFormData(form.find(item => item.services.includes(service)))
-    if(formData === undefined) {
-      formData = form[2]
+    if(service === 'Root canal treatments') {
+      setFormData(form[0])
     }
   }
-
-
-  console.log(service);
-  console.log(formData);
 
   const fieldQuery = (field) => {
     if (field.label === 'First Name') {
@@ -43,10 +46,10 @@ const Index = () => {
     } else if (field.label === 'Email') {
       return <input id='email' type={field.type} key={field.name}/>
     } else if (field.type === 'textarea') {
-      return <textarea id='detail' type={field.type} key={field.name}/>
+      return <textarea id='details' type={field.type} key={field.name}/>
     } else if (field.type === 'dropdown') {
       return (
-        <select id='country'>
+        <select id='postal'>
           {field.options.map(option => {
             return <option key={option} value={option}>{option}</option>
           })}
@@ -60,64 +63,57 @@ const Index = () => {
     if(formData === form[0] &&
       document.getElementById('firstName').value &&
       document.getElementById('lastName').value &&
-      document.getElementById('phone').value &&
-      document.getElementById('email').value &&
-      document.getElementById('country').value
+      document.getElementById('email').value
     ) {
       console.log(document.getElementById('firstName').value, 'first Name')
       console.log(document.getElementById('lastName').value, 'last Name')
-      console.log(document.getElementById('phone').value, 'phone')
       console.log(document.getElementById('email').value, 'email')
-      console.log(document.getElementById('country').value, 'country')
 
       document.getElementById('firstName').value = ''
       document.getElementById('lastName').value = ''
-      document.getElementById('phone').value = ''
       document.getElementById('email').value = ''
-      document.getElementById('country').value = ''
 
     } else if (formData === form[1] &&
+      document.getElementById('email').value
+    ) {
+      console.log(document.getElementById('email').value, 'email')
+
+      document.getElementById('email').value = ''
+    } else if ( formData === form[2] &&
       document.getElementById('firstName').value &&
       document.getElementById('lastName').value &&
       document.getElementById('phone').value &&
       document.getElementById('email').value &&
-      document.getElementById('detail').value
-    ) {
+      document.getElementById('details').value &&
+      document.getElementById('postal').value
+      ) {
       console.log(document.getElementById('firstName').value, 'first Name')
       console.log(document.getElementById('lastName').value, 'last Name')
       console.log(document.getElementById('phone').value, 'phone')
       console.log(document.getElementById('email').value, 'email')
-      console.log(document.getElementById('detail').value, 'detail')
+      console.log(document.getElementById('details').value, 'details')
+      console.log(document.getElementById('postal').value, 'postal')
 
       document.getElementById('firstName').value = ''
       document.getElementById('lastName').value = ''
-      document.getElementById('phone').value = ''
       document.getElementById('email').value = ''
-      document.getElementById('detail').value = ''
-    } else if ( formData === form[2] &&
-      document.getElementById('firstName').value &&
-      document.getElementById('lastName').value
-      ) {
-      console.log(document.getElementById('firstName').value, 'first Name')
-      console.log(document.getElementById('lastName').value, 'last Name')
-
-      document.getElementById('firstName').value = ''
-      document.getElementById('lastName').value = ''
+      document.getElementById('phone').value = ''
+      document.getElementById('details').value = ''
     } else {
       console.log('form still needs to be completed')
     }
   }
-  if(loading === 'idle') {
+  if(loading !== 'loading') {
     return (
       <div>
         <Head>
           <title>Appointment Form</title>
         </Head>
         <div>Set an Appointment</div>
-        {formData && formData !== form[2] && <div>{formData.title}</div>}
+        {formData && formData !== form[0] && <div>{formData.title}</div>}
         <form>
           <label>services</label>
-          <select onChange={ev => setService(ev.target.value)}>
+          <select onChange={ev => serviceHandler(ev)}>
             <option>Appointment</option>
             {services.map(service => {
                 return <option key={service} value={service}>{service}</option>
